@@ -1,0 +1,1 @@
+export default function NotFound(){return <main id="main" className="wrap page-content"><h1>Страницата не е намерена</h1><p>Адресът може да е променен. Използвайте търсенето или се върнете към началото.</p><div className="button-row"><a href="/" className="btn green">Към началото</a><a href="/search" className="btn outline">Търсене</a></div></main>}
