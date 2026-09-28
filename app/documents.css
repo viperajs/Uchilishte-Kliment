@@ -1,0 +1,42 @@
+/* Горното меню с групите документи, бързите бутони на /documents и страницата на раздел. */
+[data-slot=dropdown-menu-content].nav-menu{width:min(390px,calc(100vw - 32px));padding:10px;border:1px solid #e3eaee;border-radius:18px;box-shadow:0 24px 60px #0e24302b}
+.nav-menu [data-slot=dropdown-menu-item]{display:flex;align-items:center;gap:13px;padding:10px 12px;border-radius:12px;cursor:pointer}
+.nav-menu-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#eef6ea,#e1efd9);color:#3f7430;flex-shrink:0;transition:background .18s,color .18s}
+.nav-menu [data-slot=dropdown-menu-item]:focus .nav-menu-icon{background:var(--green);color:#fff}
+.nav-menu-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.nav-menu-text strong{font-size:15px;font-weight:700;color:var(--navy);line-height:1.3}
+.nav-menu-text small{font-size:12.5px;font-weight:400;color:#6d7b86;line-height:1.4}
+.nav-menu [data-slot=dropdown-menu-item].nav-menu-all{justify-content:space-between;margin-top:6px;padding:12px;border-top:1px solid #e8eef1;border-radius:0 0 12px 12px;font-size:14px;font-weight:700;color:#3f7430}
+.doc-search{max-width:560px;margin-bottom:32px}
+.doc-sections{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.doc-sections>a{display:flex;align-items:flex-start;gap:14px;padding:18px;border:1px solid #e3eaee;border-radius:16px;background:#fff;box-shadow:0 8px 24px #0e24300d;transition:transform .2s,box-shadow .2s,border-color .2s}
+.doc-sections>a:hover{transform:translateY(-3px);box-shadow:0 16px 36px #0e24301f;border-color:#cfe0c6}
+.doc-section-icon{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#eef6ea,#e1efd9);color:#3f7430;flex-shrink:0;transition:background .2s,color .2s}
+.doc-sections>a:hover .doc-section-icon{background:var(--green);color:#fff}
+.doc-section-text{display:flex;flex-direction:column;min-width:0;flex:1}
+.doc-section-text small{margin-top:6px;font-size:12px;font-weight:600;color:#98a6b0}
+.doc-section-text small.has-docs{color:#3f7430}
+.doc-groups{display:flex;flex-direction:column;gap:38px}
+.doc-group-title{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#5d7a4f;margin-bottom:16px}
+.doc-group-title::after{content:'';flex:1;height:1px;background:#e3eaee}
+.doc-section-text strong{font-family:var(--font-display);font-size:16px;color:var(--navy);line-height:1.3}
+.doc-section-text>span{font-size:13px;color:#6d7b86;line-height:1.45;margin-top:3px}
+.doc-sections>a>svg{color:#9aa9b3;align-self:flex-start}
+.doc-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:40px;align-items:start}
+.doc-nav{position:sticky;top:120px;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 140px);overflow-y:auto;padding:10px;border:1px solid #e3eaee;border-radius:16px;background:#f8fafb}
+.doc-nav-label{padding:4px 12px 8px;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#8a9aa5}
+.doc-nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:14px;font-weight:600;color:#40515f}
+.doc-nav a svg{color:#7d9a6e}
+.doc-nav a:hover{background:#eef5ea;color:#3f7430}
+.doc-nav a.active{background:var(--green);color:#fff}
+.doc-nav a.active svg{color:#fff}
+.doc-nav a.doc-nav-all{margin-top:10px;padding-top:12px;border-top:1px solid #e3eaee;border-radius:0 0 10px 10px;color:#3f7430}
+.doc-main{min-width:0}
+.doc-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.doc-chips a{padding:8px 14px;border-radius:999px;border:1px solid #d7e5cf;background:#f3f8f0;color:#3f7430;font-size:13px;font-weight:600}
+.doc-chips a:hover{background:var(--green);color:#fff;border-color:var(--green)}
+.doc-group{margin-bottom:34px;scroll-margin-top:130px}
+.doc-group h2{font-size:20px;margin-bottom:14px;color:var(--navy)}
+.doc-empty{padding:16px 20px;border:1px dashed #d5dfe4;border-radius:10px;color:#7a8893;font-size:14px}
+@media(max-width:1000px){.doc-layout{grid-template-columns:1fr;gap:24px}.doc-nav{position:static;flex-direction:row;overflow-x:auto;max-height:none;padding:6px}.doc-nav-label{display:none}.doc-nav a{white-space:nowrap;flex-shrink:0}}
+@media(max-width:640px){.doc-sections{grid-template-columns:1fr;gap:10px}.doc-sections>a{padding:14px}.doc-section-icon{width:42px;height:42px}}

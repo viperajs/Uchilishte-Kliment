@@ -1,7 +1,7 @@
-import ScrollAnimations from './ScrollAnimations';
+import ScrollAnimations from '@/app/ScrollAnimations';
 export const dynamic='force-dynamic';
 import { safeEntries } from '@/lib/server';
-import { NewsCards } from './content-ui';
+import { NewsCards } from '@/app/content-ui';
 import { history, team } from '@/lib/content';
 import { ArrowUpRight, ArrowRight, BookOpen, Users, Utensils, Newspaper, GraduationCap, Flag, Sparkles, Cpu, Rocket, FlaskConical } from 'lucide-react';
 const milestones=[{i:0,icon:Flag},{i:2,icon:Sparkles},{i:6,icon:Cpu},{i:13,icon:Rocket}];

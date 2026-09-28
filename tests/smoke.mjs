@@ -1,14 +1,13 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const origin='http://localhost:5510';
-const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/documents/archive','/documents/archive/2021-2022','/documents/archive/2022-2023','/documents/archive/2023-2024','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/services','/contacts','/search','/privacy','/admin'];
+const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/documents/pravilnici','/documents/grafici','/documents/archive','/documents/archive/2021-2022','/documents/archive/2022-2023','/documents/archive/2023-2024','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/services','/contacts','/search','/privacy','/admin'];
 for(const path of paths){const r=await fetch(origin+path);assert.equal(r.status,200,path);const html=await r.text();assert.match(html,/<html lang="bg"/);assert.match(html,/<title>/);assert(!html.includes('BUILD ERROR'),path);}
 assert.equal((await fetch(origin+'/missing-page-test')).status,404);
 assert.equal((await fetch(origin+'/documents/archive/1999-2000')).status,404);
 const archive=await fetch(origin+'/archive/2023-2024/dokumentatsiya/godishen-plan-2023-2024.docx');assert.equal(archive.status,200);assert.equal((await archive.arrayBuffer()).byteLength>1000,true);
 const archivePage=await (await fetch(origin+'/documents/archive/2023-2024')).text();assert.match(archivePage,/download="Годишен план 2023-2024 уч\. г\.docx"/);assert(!/Руменов|ЕПЛР на /.test(archivePage),'student personal data must not be published');
-const sections=await (await fetch(origin+'/documents')).text();for(const s of ['Учебни планове','Правилници','План-графици','Седмично разписание','Индивидуални учебни планове на ученици със СОП'])assert(sections.includes(s),s);
-const plans=await (await fetch(origin+'/documents?category='+encodeURIComponent('Учебни планове')+'&year=2023/2024')).text();assert.match(plans,/Индивидуален учебен план СОП – 7 клас 2023\/2024 уч\. г\. \(без лични данни\)/);
+const plans=await (await fetch(origin+'/documents/uchebni-planove')).text();assert.match(plans,/Индивидуален учебен план СОП – 7 клас 2023\/2024 уч\. г\. \(без лични данни\)/);assert.match(plans,/Учебен план 1 а клас 2021\/2022 уч\. г\./);
 assert.equal((await fetch(origin+'/api/content?admin=1')).status,403);
 assert.equal((await fetch(origin+'/api/contact?inbox=1')).status,403);
 const credentials=JSON.parse(fs.readFileSync(new URL('../.env.auth-test',import.meta.url),'utf8'));

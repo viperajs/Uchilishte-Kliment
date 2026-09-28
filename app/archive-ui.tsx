@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { ChevronRight, Download, FileText, FolderArchive, FolderOpen, LoaderCircle, Search } from 'lucide-react';
-import { downloadName, fileSize, fileType } from '@/lib/content';
+import { categoryLabel, downloadName, fileSize, fileType, sectionOfCategory } from '@/lib/content';
 import { downloadZip, type ZipItem } from '@/lib/zip';
 import type { ArchiveFile, ArchiveYear } from '@/lib/archive';
 
@@ -46,11 +46,12 @@ const zipItems = (files: ArchiveFile[], path: string[], root: string): ZipItem[]
   .map(f => ({ url: f.file, path: [root, ...f.folders.slice(path.length), downloadName(f.title, f.file)].join('/') }));
 
 function FileRow({ file, showFolder = false }: { file: ArchiveFile; showFolder?: boolean }) {
+  const section = sectionOfCategory(file.category);
   return <li className="archive-file">
     <FileText size={20} aria-hidden="true" />
     <div>
       <h3>{file.title}</h3>
-      <p>{showFolder && <span>{file.folders.join(' › ')}</span>}<a href={'/documents?category=' + encodeURIComponent(file.category) + '&year=' + encodeURIComponent(file.year)}>{file.category}</a><span>{fileType(file.file)} · {fileSize(file.size)}</span></p>
+      <p>{showFolder && <span>{file.folders.join(' › ')}</span>}{section ? <a href={'/documents/' + section.slug}>{categoryLabel(file.category)}</a> : <span>{file.category}</span>}<span>{fileType(file.file)} · {fileSize(file.size)}</span></p>
     </div>
     <a className="btn outline" href={file.file} download={downloadName(file.title, file.file)} aria-label={'Изтегли: ' + file.title}><Download size={16} />Изтегли</a>
   </li>;
@@ -67,8 +68,8 @@ function FolderView({ folder, path, files, year }: { folder: Folder; path: strin
   </details>;
 }
 
-export function ArchiveBrowser({ year, years, files }: { year: ArchiveYear; years: ArchiveYear[]; files: ArchiveFile[] }) {
-  const [query, setQuery] = useState('');
+export function ArchiveBrowser({ year, years, files, initialQuery = '' }: { year: ArchiveYear; years: ArchiveYear[]; files: ArchiveFile[]; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const root = useMemo(() => tree(files), [files]);
   const zipRoot = `Архив ${year.slug} – начало на учебната година`;
   const needle = query.trim().toLowerCase();
@@ -96,6 +97,6 @@ export function ArchiveBrowser({ year, years, files }: { year: ArchiveYear; year
       </section>)}
       {root.files.length > 0 && <ul className="archive-files">{root.files.map(f => <FileRow key={f.id} file={f} />)}</ul>}
     </>}
-    {year.withheld > 0 && <p className="notice archive-withheld">{documents(year.withheld)} от архива за {year.year} не са публикувани, защото съдържат лични данни на ученици (екипи за подкрепа за личностно развитие, индивидуални учебни планове и програми).</p>}
+    {year.withheld > 0 && <p className="notice archive-withheld">{documents(year.withheld)} от архива за {year.year} не са публикувани, защото съдържат лични данни на ученици (екипи за подкрепа за личностно развитие, индивидуални учебни програми, планове за допълнителна подкрепа).</p>}
   </div>;
 }

@@ -15,6 +15,13 @@
       "when": 1790015265539,
       "tag": "0001_many_warhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790539167519,
+      "tag": "0002_chubby_hedge_knight",
+      "breakpoints": true
     }
   ]
 }

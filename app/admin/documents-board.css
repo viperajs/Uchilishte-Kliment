@@ -1,0 +1,33 @@
+/* Админ „Документи“: табове за групите, бутони за разделите, кутия за всеки подраздел. */
+.a-docs{padding:16px 18px 22px}
+.a-docs-tabs{display:flex;gap:6px;padding:5px;margin-bottom:14px;border-radius:14px;background:#eef2f5;overflow-x:auto}
+.a-docs-tabs button{flex:1 0 auto;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:0;border-radius:10px;background:none;font-size:15px;font-weight:700;color:var(--a-muted);cursor:pointer;white-space:nowrap}
+.a-docs-tabs button:hover{color:var(--a-ink)}
+.a-docs-tabs button[aria-selected=true]{background:#fff;color:var(--a-green-dark);box-shadow:0 2px 8px #0e24301a}
+.a-docs-tabs .n{min-width:22px;padding:0 7px;border-radius:20px;background:#dfe6eb;font-size:12px;color:var(--a-muted)}
+.a-docs-tabs button[aria-selected=true] .n{background:var(--a-green-soft);color:var(--a-green-dark)}
+.a-docs-sections{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-bottom:22px}
+.a-docs-sections button{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--a-line);border-radius:12px;background:#fff;text-align:left;cursor:pointer;color:var(--a-ink);transition:border-color .15s,background .15s}
+.a-docs-sections button svg{color:var(--a-green);flex-shrink:0}
+.a-docs-sections button span{display:flex;flex-direction:column;min-width:0;font-size:14px;font-weight:700;line-height:1.25}
+.a-docs-sections button small{font-size:12px;font-weight:500;color:var(--a-muted);margin-top:2px}
+.a-docs-sections button:hover{border-color:#bcd6b0;background:#fbfdfa}
+.a-docs-sections button[aria-pressed=true]{border-color:var(--a-green);background:var(--a-green);color:#fff}
+.a-docs-sections button[aria-pressed=true] svg,.a-docs-sections button[aria-pressed=true] small{color:#fff}
+.a-docs-sections button.linked{border-style:dashed;background:#fafbfc}
+.a-docs-head{display:flex;align-items:center;gap:14px;padding-top:18px;margin-bottom:14px;border-top:1px solid var(--a-line)}
+.a-docs-head>div{flex:1;min-width:0}
+.a-docs-head h2{font-size:20px}
+.a-docs-head p{font-size:13px;color:var(--a-muted);margin-top:2px}
+.a-docs-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--a-green-soft);color:var(--a-green-dark);flex-shrink:0}
+.a-docs-box{position:relative;border:1px solid var(--a-line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.a-docs-box.over{border-color:var(--a-green)}
+.a-docs-box-head{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 16px;background:#fafbfc;border-bottom:1px solid var(--a-line)}
+.a-docs-box-head strong{font-size:15px;min-width:0}
+.a-docs-box-head .n{margin-right:auto;min-width:22px;padding:0 7px;border-radius:20px;background:#e9eef2;color:var(--a-muted);font-size:12px;font-weight:600;text-align:center}
+.a-docs-box .a-row:last-child{border-bottom:0}
+.a-docs-empty{display:flex;align-items:center;gap:10px;padding:16px;font-size:14px;color:var(--a-muted)}
+.a-docs-empty svg{color:#9aabb8;flex-shrink:0}
+.a-docs-drop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;background:#edf5e9ee;border:2px dashed var(--a-green);border-radius:12px;color:var(--a-green-dark);font-weight:700;font-size:15px;pointer-events:none}
+@media(max-width:900px){.a-docs{padding:12px}.a-docs-tabs button{flex:0 0 auto;padding:9px 12px;font-size:14px}.a-docs-sections{grid-template-columns:repeat(2,minmax(0,1fr))}.a-docs-box-head{flex-wrap:wrap}}
+@media(max-width:480px){.a-docs-sections{grid-template-columns:1fr}}

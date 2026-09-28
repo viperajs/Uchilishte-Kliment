@@ -2,6 +2,7 @@
 import { put, list } from '@vercel/blob';
 import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { uploadTypes } from './uploads';
 
 const useBlob = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 const localDir = path.join(process.cwd(), '.data', 'uploads');
@@ -29,7 +30,6 @@ export async function loadFile(id: string): Promise<{ body: BodyInit; contentTyp
     const [name] = await readdir(path.join(localDir, id));
     if (!name) return null;
     const ext = id.split('.').pop() || '';
-    const types: Record<string, string> = { pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
-    return { body: new Uint8Array(await readFile(path.join(localDir, id, name))), contentType: types[ext] || 'application/octet-stream', filename: name };
+    return { body: new Uint8Array(await readFile(path.join(localDir, id, name))), contentType: uploadTypes[ext] || 'application/octet-stream', filename: name };
   } catch { return null; }
 }
