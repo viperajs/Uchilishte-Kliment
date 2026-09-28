@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const origin='http://localhost:5510';
-const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/services','/contacts','/search','/privacy','/admin'];
+const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/documents/pravilnici','/documents/grafici','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/services','/contacts','/search','/privacy','/admin'];
 for(const path of paths){const r=await fetch(origin+path);assert.equal(r.status,200,path);const html=await r.text();assert.match(html,/<html lang="bg"/);assert.match(html,/<title>/);assert(!html.includes('BUILD ERROR'),path);}
 assert.equal((await fetch(origin+'/missing-page-test')).status,404);
 assert.equal((await fetch(origin+'/api/content?admin=1')).status,403);

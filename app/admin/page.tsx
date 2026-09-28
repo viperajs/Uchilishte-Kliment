@@ -1,9 +1,10 @@
 import { getAdmin } from '@/lib/auth';
-import Admin from './Admin';
-import { LoginForm, AccountControls } from './AuthForms';
+import AdminApp from './AdminApp';
+import { toSection } from './sections';
+import { LoginForm } from './AuthForms';
 export const dynamic='force-dynamic';
-export const metadata={title:'Администрация | СУ „Св. Климент Охридски“',robots:{index:false,follow:false}};
-export default async function AdminPage(){
+export default async function AdminPage({searchParams}:{searchParams:Promise<{s?:string}>}){
   const user=await getAdmin();
-  return <main id="main" className="wrap page-content"><div className="section-heading"><div><span className="eyebrow">Управление на съдържанието</span><h1>Администрация</h1></div></div>{user?<><AccountControls email={user.email}/><Admin/></>:<LoginForm/>}</main>;
+  if(user)return <AdminApp email={user.email} initialSection={toSection((await searchParams).s)}/>;
+  return <main id="main" className="a-login"><div style={{width:'min(460px,100%)'}}><div className="a-login-brand"><img src="/logo.jpg" alt=""/><div><strong>СУ „Св. Климент Охридски“</strong><small>Администрация на сайта</small></div></div><LoginForm/></div></main>;
 }
