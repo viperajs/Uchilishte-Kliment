@@ -2,18 +2,19 @@
 import { useRef, useState } from 'react';
 import { UploadCloud, FileText, X, Plus, Trash2, Star } from 'lucide-react';
 import { toast } from 'sonner';
-import { documentCategories, documentSections, otherDocumentCategories, subCategory, type Attachment } from '@/lib/content';
+import { documentCategories, documentSections, otherDocumentCategories, subCategory, type Attachment, archiveOnlyCategories } from '@/lib/content';
 import { uploadFile, type Uploaded } from './upload';
 
 // Categories grouped as on the site's „Документи“ page: a section, then its subsections.
 export function DocumentCategorySelect({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
   return <select className="a-select" value={value} onChange={e => onChange(e.target.value)} disabled={disabled}>
-    {value && !documentCategories.includes(value) && <option value={value}>{value} (стара категория)</option>}
+    {value && !documentCategories.includes(value) && !archiveOnlyCategories.includes(value) && <option value={value}>{value} (стара категория)</option>}
     {documentSections.filter(s => !s.href).map((s, i) => <optgroup key={s.slug} label={`${i + 1}. ${s.title}`}>
       <option value={s.title}>{s.items ? s.title + ' — общо за раздела' : s.title}</option>
       {s.items?.map(item => <option key={item} value={subCategory(s, item)}>{item}</option>)}
     </optgroup>)}
     <optgroup label="Други страници на сайта">{otherDocumentCategories.map(c => <option key={c}>{c}</option>)}</optgroup>
+    <optgroup label="Само в „Архив по години“">{archiveOnlyCategories.map(c => <option key={c}>{c}</option>)}</optgroup>
   </select>;
 }
 

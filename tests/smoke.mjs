@@ -1,9 +1,13 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const origin='http://localhost:5510';
-const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/documents/pravilnici','/documents/grafici','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/services','/contacts','/search','/privacy','/admin'];
+const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/documents/pravilnici','/documents/grafici','/documents/archive','/documents/archive/2021-2022','/documents/archive/2022-2023','/documents/archive/2023-2024','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/services','/contacts','/search','/privacy','/admin'];
 for(const path of paths){const r=await fetch(origin+path);assert.equal(r.status,200,path);const html=await r.text();assert.match(html,/<html lang="bg"/);assert.match(html,/<title>/);assert(!html.includes('BUILD ERROR'),path);}
 assert.equal((await fetch(origin+'/missing-page-test')).status,404);
+assert.equal((await fetch(origin+'/documents/archive/1999-2000')).status,404);
+const archive=await fetch(origin+'/archive/2023-2024/dokumentatsiya/godishen-plan-2023-2024.docx');assert.equal(archive.status,200);assert.equal((await archive.arrayBuffer()).byteLength>1000,true);
+const archivePage=await (await fetch(origin+'/documents/archive/2023-2024')).text();assert.match(archivePage,/download="Годишен план 2023-2024 уч\. г\.docx"/);assert(!/Руменов|ЕПЛР на /.test(archivePage),'student personal data must not be published');
+const plans=await (await fetch(origin+'/documents/uchebni-planove')).text();assert.match(plans,/Индивидуален учебен план СОП – 7 клас 2023\/2024 уч\. г\. \(без лични данни\)/);assert.match(plans,/Учебен план 1 а клас 2021\/2022 уч\. г\./);
 assert.equal((await fetch(origin+'/api/content?admin=1')).status,403);
 assert.equal((await fetch(origin+'/api/contact?inbox=1')).status,403);
 const credentials=JSON.parse(fs.readFileSync(new URL('../.env.auth-test',import.meta.url),'utf8'));
@@ -16,6 +20,9 @@ const entry={id,kind:'news',title:'Тестова публикация',body:'А
 assert.equal((await fetch(origin+'/api/content',{method:'POST',headers:{...headers,Cookie:''},body:JSON.stringify(entry)})).status,403);
 assert.equal((await fetch(origin+'/api/content',{method:'POST',headers:{...headers,Origin:'https://invalid.example'},body:JSON.stringify(entry)})).status,403);
 assert.equal((await fetch(origin+'/api/content',{method:'POST',headers,body:JSON.stringify({...entry,file:'javascript:alert(1)'})})).status,400);
+assert.equal((await fetch(origin+'/api/content',{method:'POST',headers,body:JSON.stringify({...entry,file:'/archive/../.env'})})).status,400);
+const archived={...entry,id:crypto.randomUUID(),kind:'document',category:'Заповеди',file:'/archive/2023-2024/zapovedi/zapoved-utv-etichen-kodeks-2023-2024.docx',published:0};
+assert.equal((await fetch(origin+'/api/content',{method:'POST',headers,body:JSON.stringify(archived)})).status,200);
 assert.equal((await fetch(origin+'/api/content',{method:'POST',headers,body:JSON.stringify(entry)})).status,200);
 let data=await (await fetch(origin+'/api/content')).json();assert(data.entries.some(e=>e.id===id));
 entry.published=0;entry.title='Редактирана чернова';
@@ -31,4 +38,4 @@ const message={first:'Тест',last:'Проверка',email:'test@example.com'
 const sent=await fetch(origin+'/api/contact',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin},body:JSON.stringify(message)});assert.equal(sent.status,200);const received=await sent.json();
 assert.equal((await fetch(origin+'/api/contact',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin},body:JSON.stringify(message)})).status,400);
 const inbox=await (await fetch(origin+'/api/contact?inbox=1',{headers:{Cookie:cookie}})).json();assert(inbox.messages.some(m=>m.id===received.id));
-console.log(JSON.stringify({routes:paths.length,checks:['404','admin authorization','CSRF','URL validation','persistent publish/edit/draft','PDF upload/download','file validation','contact persistence','replay protection','private inbox'],result:'PASS'}));
+console.log(JSON.stringify({routes:paths.length,checks:['404','document archive','admin authorization','CSRF','URL validation','persistent publish/edit/draft','PDF upload/download','file validation','contact persistence','replay protection','private inbox'],result:'PASS'}));
