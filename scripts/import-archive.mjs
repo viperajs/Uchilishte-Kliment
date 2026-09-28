@@ -144,20 +144,15 @@ function importYear(root) {
     const text = name.toLowerCase().endsWith('.docx') ? docxText(buf) : '';
     return { parts, name, rel: parts.map(p => p.normalize('NFC')).join('/'), buf, text, ext: name.split('.').pop().toLowerCase() };
   }).filter(c => EXTENSIONS.has(c.ext));
-  // The same file saved twice, or the same text under a truncated or wrong-year name: keep the name with this year.
-  const score = c => [Number(ownYear.test(c.name)), c.name.length];
+  // Everything sent is published; the same file or text under another name is only reported for review.
   for (const c of candidates) {
     const key = c.text ? 'text:' + c.text : 'md5:' + createHash('md5').update(c.buf).digest('hex');
     const other = seen.get(key);
-    if (!other) { seen.set(key, c); continue; }
-    const [a, b] = [score(c), score(other)];
-    const [keep, drop] = a[0] > b[0] || (a[0] === b[0] && a[1] > b[1]) ? [c, other] : [other, c];
-    if (!keep.buf.equals(drop.buf) && (ownYear.test(drop.name) || !ownYear.test(keep.name))) continue;
-    seen.set(key, keep); drop.duplicate = true; duplicates.push(`${drop.rel} (= ${keep.name})`);
+    if (!other) seen.set(key, c);
+    else if (c.buf.equals(other.buf) || !ownYear.test(c.name) || !ownYear.test(other.name)) duplicates.push(`${c.rel} (= ${other.name})`);
   }
   rmSync(path.join(PUBLIC, yearSlug), { recursive: true, force: true });
-  for (const { parts, name, rel, buf, text, ext, duplicate } of candidates) {
-    if (duplicate) continue;
+  for (const { parts, name, rel, buf, text, ext } of candidates) {
     if ((PERSONAL.test(rel) && !STAFF_ONLY.test(name)) || hasEgn(buf, text)) { withheld.push(rel); continue; }
     const folders = parts.slice(0, -1).map(folderName), stem = name.slice(0, -(ext.length + 1));
     const title = tidy(stem);
@@ -183,7 +178,7 @@ for (const root of roots) {
   data.files = [...data.files.filter(f => f.year !== info.year), ...files];
   console.log(`${info.year}: ${info.files} документа (${(info.size / 1e6).toFixed(1)} MB), ${withheld.length} не са публикувани поради лични данни:`);
   for (const w of withheld) console.log('  - ' + w);
-  if (duplicates.length) console.log(`  Пропуснати дубликати (${duplicates.length}):\n` + duplicates.map(d => '  = ' + d).join('\n'));
+  if (duplicates.length) console.log(`  Възможни дубликати (публикувани са; прегледайте ги):\n` + duplicates.map(d => '  = ' + d).join('\n'));
 }
 data.files.sort((a, b) => b.year.localeCompare(a.year));
 writeFileSync(DATA, JSON.stringify(data, null, 1) + '\n');

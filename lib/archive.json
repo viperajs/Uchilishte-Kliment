@@ -12,8 +12,8 @@
    "year": "2022/2023",
    "slug": "2022-2023",
    "title": "Начало на 2022/2023 уч. г. Документация и заповеди",
-   "files": 163,
-   "size": 27847205,
+   "files": 165,
+   "size": 27971539,
    "withheld": 20
   },
   {
@@ -3486,6 +3486,19 @@
    "size": 208972
   },
   {
+   "id": "arch-2223-7bb3360be7",
+   "year": "2022/2023",
+   "folders": [
+    "Заповеди",
+    "Утвърждаване на училищните учебни планове"
+   ],
+   "title": "Заповед – утв. УУП за 12 кл. 2023/2024 уч. г.",
+   "category": "Заповеди",
+   "file": "/archive/2022-2023/zapovedi/utvarzhdavane-na-uchilishtnite-uchebni-planove/zapoved-utv-uup-za-12-kl-2023-2024.docx",
+   "name": "Заповед - утв. УУП за 12 кл. 2023 - 2024 уч.г.docx",
+   "size": 63549
+  },
+  {
    "id": "arch-2223-d916c31de0",
    "year": "2022/2023",
    "folders": [
@@ -4171,6 +4184,18 @@
    "file": "/archive/2022-2023/zapovedi/zapoved-utv-programa-za-lichnostno-razvitie-na-uchenitsite-2022-2023.docx",
    "name": "Заповед - утв. Програма за личностно развитие нз учениците 2022 - 2023 уч.г..docx",
    "size": 205922
+  },
+  {
+   "id": "arch-2223-1a296e478d",
+   "year": "2022/2023",
+   "folders": [
+    "Заповеди"
+   ],
+   "title": "Заповед – утв. Програма за прев. на ранното",
+   "category": "Заповеди",
+   "file": "/archive/2022-2023/zapovedi/zapoved-utv-programa-za-prev-na-rannoto.docx",
+   "name": "Заповед - утв. Програма за прев. на ранното .docx",
+   "size": 60785
   },
   {
    "id": "arch-2223-c6617aea3c",
