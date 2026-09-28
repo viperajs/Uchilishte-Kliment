@@ -59,25 +59,32 @@ export function zip(files: { path: string; data: Uint8Array<ArrayBuffer> }[], da
   return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
 }
 
+// Files kept on another server (e.g. uploads in Vercel Blob) are added when that server allows it; otherwise
+// they are left out and returned, so they can be downloaded one by one. A missing file of the site stops the archive.
 export async function downloadZip(items: ZipItem[], filename: string, progress?: (done: number, total: number) => void) {
-  const files: { path: string; data: Uint8Array<ArrayBuffer> }[] = new Array(items.length);
+  const files: ({ path: string; data: Uint8Array<ArrayBuffer> } | undefined)[] = new Array(items.length);
   let next = 0, done = 0, failed = false;
   async function worker() {
     while (next < items.length && !failed) {
-      const i = next++;
+      const i = next++, external = /^https:/.test(items[i].url);
       try {
         const response = await fetch(items[i].url);
         if (!response.ok) throw new Error(`${response.status} ${items[i].url}`);
         files[i] = { path: items[i].path, data: new Uint8Array(await response.arrayBuffer()) };
-      } catch (error) { failed = true; throw error; }
+      } catch (error) {
+        if (!external) { failed = true; throw error; }
+      }
       if (!failed) progress?.(++done, items.length);
     }
   }
   await Promise.all(Array.from({ length: Math.min(6, items.length) }, worker));
-  const url = URL.createObjectURL(zip(files));
+  const included = files.filter(f => f !== undefined);
+  if (!included.length) throw new Error('No file could be added to the archive');
+  const url = URL.createObjectURL(zip(included));
   const link = Object.assign(document.createElement('a'), { href: url, download: filename });
   document.body.append(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return items.filter((_, i) => !files[i]);
 }

@@ -417,6 +417,7 @@ input,textarea,select{font-size:16px}
 .zip-download .btn{min-height:44px;padding:10px 18px;font-size:14px;gap:10px;border-radius:10px;background:#fff}
 .zip-download .btn small{font-size:12px;font-weight:600;color:#6b7c88;padding-left:10px;border-left:1px solid #d6e0e6}
 .zip-download .error-message{max-width:360px}
+.zip-download .zip-note{max-width:360px;background:#f3f6ee;border-left:3px solid #7b9b59;color:#4e6140;padding:10px 12px;border-radius:5px;font-size:13px;line-height:1.6}
 .spin{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .archive-overview .lead{max-width:900px;margin-bottom:32px}

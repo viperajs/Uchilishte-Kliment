@@ -9,11 +9,12 @@ const documents = (n: number) => n + (n === 1 ? ' документ' : ' доку
 const zipName = (...parts: string[]) => parts.join(' – ').replace(/[\\/:*?"<>|]+/g, '-').replace(/[.\s]+$/, '') + '.zip';
 
 export function ZipButton({ items, filename, label, size }: { items: ZipItem[]; filename: string; label: string; size?: number }) {
-  const [progress, setProgress] = useState<[number, number] | null>(null), [error, setError] = useState('');
+  const [progress, setProgress] = useState<[number, number] | null>(null), [error, setError] = useState(''), [skipped, setSkipped] = useState<string[]>([]);
   async function run() {
     setError('');
+    setSkipped([]);
     setProgress([0, items.length]);
-    try { await downloadZip(items, filename, (done, total) => setProgress([done, total])); }
+    try { setSkipped((await downloadZip(items, filename, (done, total) => setProgress([done, total]))).map(i => i.path.split('/').pop()!)); }
     catch { setError('Архивът не беше създаден. Опитайте отново или изтеглете файловете поотделно.'); }
     finally { setProgress(null); }
   }
@@ -22,6 +23,7 @@ export function ZipButton({ items, filename, label, size }: { items: ZipItem[]; 
       {progress ? <><LoaderCircle size={17} className="spin" />Подготвяне {progress[0]} от {progress[1]}…</> : <><FolderArchive size={17} />{label}{size ? <small>ZIP · {fileSize(size)}</small> : null}</>}
     </button>
     {error && <p role="alert" className="error-message">{error}</p>}
+    {skipped.length > 0 && <p role="status" className="zip-note">{skipped.length === 1 ? 'Един документ не е включен в архива, защото се съхранява на друг сървър. Изтеглете го поотделно: ' : `${skipped.length} документа не са включени в архива, защото се съхраняват на друг сървър. Изтеглете ги поотделно: `}{skipped.join(', ')}</p>}
   </div>;
 }
 
