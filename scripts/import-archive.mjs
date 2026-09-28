@@ -3,7 +3,8 @@
 // the original Bulgarian file names are kept for downloads.
 //   node scripts/import-archive.mjs "<extracted archive folder>" ["<folder>" …]
 // Re-importing a year replaces that year. Documents with personal data of individual students
-// (support teams, individual education plans and programmes) are withheld and only counted.
+// (support teams, individual education plans and programmes) are withheld and only counted, unless
+// their data has been erased and the file name says so: "… (без лични данни).docx".
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { inflateRawSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
@@ -13,6 +14,7 @@ const DATA = 'lib/archive.json', PUBLIC = 'public/archive';
 const EXTENSIONS = new Set(['doc', 'docx', 'pdf', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'rtf']);
 const PERSONAL = /ЕПЛР|Индивид|ИУП (за|без)|ИУП - СОП|ИУП СОП|допълнителна подкрепа/;
 const STAFF_ONLY = /Коорд/; // coordinator appointments name staff members only
+const ANONYMIZED = /\(без лични данни\)/;
 
 const cyr = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sht', ъ: 'a', ь: 'y', ю: 'yu', я: 'ya', ѝ: 'i' };
 const slug = (s, max = 70) => {
@@ -84,18 +86,57 @@ function folderName(raw) {
   return tidy(s.replace(/\s*(за\s+)?\d{4}\s*-\s*\d{4}\s*уч.*$/, ''));
 }
 
-// Site document categories (lib/content.ts documentCategories).
-function category(title, folders) {
+// Section and sub-item of the documents section (lib/content.ts documentSections) for a document.
+const word = w => new RegExp(`(?<![а-яa-z])${w}(?![а-яa-z])`);
+const RULES = [
+  [/етичен кодекс/, 'Етичен кодекс'],
+  [/индивидуален учебен план|^иуп /, 'Учебни планове', 'Индивидуални учебни планове на ученици със СОП'],
+  [/учебен план|учеб\. план|уч\. план|рамков уп|ууп|заглавна страница|нар\. ?4|бр\. часове/, 'Учебни планове', 'Училищни учебни планове'],
+  [/стратеги/, 'Стратегия'],
+  [/^пду/, 'Правилници', 'Правилник за дейността на училището (ПДУ)'],
+  [/^пвтр|вътрешния трудов ред/, 'Правилници', 'Правилник за вътрешния трудов ред (ПВТР)'],
+  [/буовт|збуот|бувот|безопасни условия/, 'Правилници', 'Правилник за БУВОТ'],
+  [/правилник.*етика/, 'Правилници', 'Правилник на комисията по етика'],
+  [/пропускателн/, 'Правилници', 'Правилник за пропускателния режим'],
+  [/процедура.*санкции/, 'Процедури', 'Налагане на санкции'],
+  [word('орес'), 'ОРЕС'],
+  [/форми на обучение/, 'Форми на обучение'],
+  [/дейности по интереси/, 'Дейности по интереси'],
+  [/спортен календар/, 'Спортни дейности и календар'],
+  [/дневен режим/, 'Дневен режим'],
+  [/план-график за заседанията/, 'План-графици', 'Заседания на педагогическия съвет'],
+  [/консултативната дейност/, 'План-графици', 'Консултативна дейност на педагогическия съветник'],
+  [/квалификация/, 'Планове', 'План за квалификационната дейност'],
+  [/годишен план|год\. план/, 'Планове', 'Годишен план'],
+  [/контролната дейност на директора/, 'Планове', 'План за контролната дейност на директора'],
+  [word('здуд'), 'Планове', 'План за контролната дейност на ЗДУД'],
+  [word('укс'), 'Планове', 'План за дейността на училищния координационен съвет'],
+  [/^план на (мо|екк)/, 'Планове', 'Планове на методическите обединения и ЕКК'],
+  [/план-програма по бдп|график бдп/, 'План-програми', 'БДП'],
+  [/^график|^седмичен график/, 'Графици'],
+  [/пед\. съвет|педагогическия съветник/, 'Планове', 'План за дейността на педагогическия съветник'],
+  [/цоуд/, 'Програми', 'ЦОУД'],
+  [/гражданско|гзеио/, 'Програми', 'Гражданско, здравно, екологично и интеркултурно образование'],
+  [/личностно/, 'Програми', 'Подкрепа за личностно развитие'],
+  [/работа с родители/, 'Програми', 'Работа с родители'],
+  [/^програма/, 'Програми'],
+  [/^мерки|^план/, 'Планове'],
+];
+// Orders go to "Заповеди", except the ones that are the only record of a schedule or of admission.
+const ORDER_RULES = [
+  [/седмично разписание/, 'Седмично разписание'],
+  [/списък на приети/, 'Прием в I, V и VIII клас'],
+  [/график на учебното време/, 'Графици'],
+  [/утв\. график/, 'Графици', 'I срок'],
+];
+function section(title, folders) {
   const t = title.toLowerCase();
-  if (folders[0] === 'Заповеди' || t.startsWith('заповед')) return 'Заповеди';
-  if (t.includes('етичен кодекс')) return 'Етичен кодекс';
-  if (/учебен план|учеб\. план|уч\. план|рамков уп|\bуп\b|ууп|заглавна страница|нар\. ?4|бр\. часове/.test(t) || folders.some(f => /учебни планове/i.test(f))) return 'Учебни планове';
-  if (t.startsWith('мерки')) return 'Мерки';
-  if (/правилник|^пду|^пвтр|процедура|условия и ред|форми на обучение|правила/.test(t)) return 'Правилници';
-  if (/^график|календар|дневен режим|дежурство|план-график за заседанията|консултативната дейност/.test(t)) return 'Графици';
-  if (/програма|учебни програми|дейности по интереси/.test(t)) return 'Програми';
-  if (/план|стратеги|контролна дейност/.test(t) || folders.some(f => /стратегия|планове/i.test(f))) return 'Планове';
-  return 'Други документи';
+  if (folders[0] === 'Заповеди' || t.startsWith('заповед')) {
+    const [, category, sub] = ORDER_RULES.find(([re]) => re.test(t)) || (/^Графици/.test(folders[1] || '') ? [, 'Графици', 'I срок'] : [, 'Заповеди']);
+    return { category, sub };
+  }
+  const [, category = 'Други документи', sub] = RULES.find(([re]) => re.test(t)) || [];
+  return { category, sub };
 }
 
 const collator = new Intl.Collator('bg', { numeric: true, sensitivity: 'base' });
@@ -153,7 +194,7 @@ function importYear(root) {
   }
   rmSync(path.join(PUBLIC, yearSlug), { recursive: true, force: true });
   for (const { parts, name, rel, buf, text, ext } of candidates) {
-    if ((PERSONAL.test(rel) && !STAFF_ONLY.test(name)) || hasEgn(buf, text)) { withheld.push(rel); continue; }
+    if ((PERSONAL.test(rel) && !STAFF_ONLY.test(name) && !ANONYMIZED.test(name)) || hasEgn(buf, text)) { withheld.push(rel); continue; }
     const folders = parts.slice(0, -1).map(folderName), stem = name.slice(0, -(ext.length + 1));
     const title = tidy(stem);
     const fileBase = slug(title.replace(/\s*уч\. г\./g, '')), dir = [yearSlug, ...folders.map(f => slug(f, 60))].join('/');
@@ -164,7 +205,8 @@ function importYear(root) {
     mkdirSync(path.join(PUBLIC, dir), { recursive: true });
     copyFileSync(path.join(root, ...parts), path.join(PUBLIC, file));
     const id = `arch-${m[1].slice(2)}${m[2].slice(2)}-${createHash('sha1').update(`${yearSlug}/${rel}`).digest('hex').slice(0, 10)}`;
-    files.push({ id, year, folders, title, category: category(title, folders), file: `/archive/${file}`, name, size: buf.length });
+    const { category, sub } = section(title, folders);
+    files.push({ id, year, folders, title, category, ...(sub && { sub }), file: `/archive/${file}`, name, size: buf.length });
   }
   return { info: { year, slug: yearSlug, title: tidy(base), files: files.length, size: files.reduce((a, f) => a + f.size, 0), withheld: withheld.length }, files, withheld, duplicates };
 }

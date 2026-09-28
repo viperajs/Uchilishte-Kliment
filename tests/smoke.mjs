@@ -7,6 +7,8 @@ assert.equal((await fetch(origin+'/missing-page-test')).status,404);
 assert.equal((await fetch(origin+'/documents/archive/1999-2000')).status,404);
 const archive=await fetch(origin+'/archive/2023-2024/dokumentatsiya/godishen-plan-2023-2024.docx');assert.equal(archive.status,200);assert.equal((await archive.arrayBuffer()).byteLength>1000,true);
 const archivePage=await (await fetch(origin+'/documents/archive/2023-2024')).text();assert.match(archivePage,/download="Годишен план 2023-2024 уч\. г\.docx"/);assert(!/Руменов|ЕПЛР на /.test(archivePage),'student personal data must not be published');
+const sections=await (await fetch(origin+'/documents')).text();for(const s of ['Учебни планове','Правилници','План-графици','Седмично разписание','Индивидуални учебни планове на ученици със СОП'])assert(sections.includes(s),s);
+const plans=await (await fetch(origin+'/documents?category='+encodeURIComponent('Учебни планове')+'&year=2023/2024')).text();assert.match(plans,/Индивидуален учебен план СОП – 7 клас 2023\/2024 уч\. г\. \(без лични данни\)/);
 assert.equal((await fetch(origin+'/api/content?admin=1')).status,403);
 assert.equal((await fetch(origin+'/api/contact?inbox=1')).status,403);
 const credentials=JSON.parse(fs.readFileSync(new URL('../.env.auth-test',import.meta.url),'utf8'));
