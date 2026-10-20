@@ -46,6 +46,8 @@ export const documentGroups=[
 ];
 // Категории за документи към другите страници на сайта (Услуги, Бюджет, Стипендии, съветите).
 export const otherDocumentCategories=['Заявления','Декларации','Бюджет','Стипендии','Ученически съвет','Обществен съвет'];
+// Archive documents outside the sections (orders and working materials) — shown in „Архив по години“.
+export const archiveOnlyCategories=['Заповеди','Други документи'];
 export const subCategory=(s:DocumentSection,item:string)=>s.title+' / '+item;
 export const documentCategories=[...documentSections.filter(s=>!s.href).flatMap(s=>[s.title,...(s.items||[]).map(i=>subCategory(s,i))]),...otherDocumentCategories];
 export const sectionOfCategory=(category:string)=>documentSections.find(s=>!s.href&&(category===s.title||category.startsWith(s.title+' / ')));
@@ -63,6 +65,7 @@ export const pages:Record<string,{title:string;description:string}>={
  '/admissions/11':{title:'Прием в XI клас',description:'Поглед към бъдещето.'},
  '/news':{title:'Новини и обявления',description:'Събития, постижения и важни моменти от живота на училището.'},
  '/documents':{title:'Документи',description:'Всички училищни документи, подредени по раздели.'},
+ '/documents/archive':{title:'Архив на документите',description:'Документацията и заповедите от началото на предишните учебни години – подредени по години и раздели, готови за изтегляне.'},
  '/schedule':{title:'Седмично разписание',description:'Изберете клас и учебна година, за да видите публикуваното разписание.'},
  '/menu':{title:'Ученическо меню',description:'Седмично меню, дати и информация за алергените.'},
  '/scholarships':{title:'Стипендии',description:'Условия, срокове и необходими документи.'},
@@ -81,9 +84,15 @@ export const navigation:NavItem[]=[{title:'Начало',href:'/'},...documentGr
 export const useful=[['Министерство на образованието и науката','https://www.mon.bg/'],['Държавна агенция за закрила на детето','https://www.sacp.government.bg/'],['Национален образователен портал','https://start.e-edu.bg/'],['Електронен дневник Shkolo','https://app.shkolo.bg/']];
 const base={kind:'news',category:'STEM',year:'2025/2026',file:'',details:'',published:1};
 export const initialEntries:Entry[]=[{...base,id:'stem-opening',title:'Новият STEM център: бъдещето започва днес',date:'2026-06-09',body:'В училището е открит нов STEM център с кабинети по природни науки, предприемачество и информационни технологии. Учениците представят експерименти, дигитални проекти и предприемачески идеи. Новата среда създава възможности за практическо обучение, научни изследвания и работа в екип.',image:'/stem.jpg',source:'https://ohridski.eu/2026/06/09/%d0%be%d1%82%d0%ba%d1%80%d0%b8%d0%b2%d0%b0%d0%bd%d0%b5-%d0%bd%d0%b0-stem-%d1%86%d0%b5%d0%bd%d1%82%d1%8a%d1%80-2/'},{...base,id:'stem-invitation',title:'Покана за откриване на STEM центъра',date:'2026-05-27',body:'Публикувана е официална покана за откриването на училищния STEM център. Материалът е от учебната 2025/2026 година и се съхранява в архива.',image:'/school.jpg',source:'https://ohridski.eu/2026/05/27/%d0%be%d1%82%d0%ba%d1%80%d0%b8%d0%b2%d0%b0%d0%bd%d0%b5-%d0%bd%d0%b0-stem-%d1%86%d0%b5%d0%bd%d1%82%d1%8a%d1%80/'},{...base,id:'offers-2025',category:'Обявления',title:'Покана за представяне на оферти',date:'2025-09-02',body:'Архивна покана за представяне на оферти. Оригиналният документ е достъпен в официалната публикация на училището.',image:'/school.jpg',source:'https://ohridski.eu/2025/09/02/%d0%bf%d0%be%d0%ba%d0%b0%d0%bd%d0%b0-%d0%b7%d0%b0-%d0%bf%d1%80%d0%b5%d0%b4%d1%81%d1%82%d0%b0%d0%b2%d1%8f%d0%bd%d0%b5-%d0%bd%d0%b0-%d0%be%d1%84%d0%b5%d1%80%d1%82%d0%b8/'}];
+export const fileSize=(bytes:number)=>bytes>=1e6?(bytes/1e6).toLocaleString('bg-BG',{maximumFractionDigits:1})+' MB':Math.max(1,Math.round(bytes/1e3))+' KB';
+export const fileType=(url:string)=>{let name='';try{name=new URL(url,'https://local').pathname.split('/').pop()||'';}catch{}return name.includes('.')?name.split('.').pop()!.toUpperCase():'';};
+// Name for a downloaded file: the document title without characters that file systems reject.
+export const downloadName=(title:string,url:string)=>{const ext=fileType(url).toLowerCase();return title.replace(/[\\/:*?"<>|]+/g,'-').replace(/[.\s]+$/,'')+(ext?'.'+ext:'');};
+// File size of archive documents, stored as JSON in details.
+export const documentSize=(e:Entry)=>{try{return Number(JSON.parse(e.details||'{}').size)||0;}catch{return 0;}};
 export function entryHref(e:Entry){return e.kind==='news'?'/news/'+e.id:e.kind==='admission'?'/admissions/'+e.category:e.kind==='team'?'/team':e.kind==='page'?e.category:documentHref(e);}
 const otherDocumentPages:Record<string,string>={'Заявления':'/services?category=Заявления','Декларации':'/services?category=Декларации','Бюджет':'/budget','Стипендии':'/scholarships','Ученически съвет':'/council/students','Обществен съвет':'/council/public'};
-function documentHref(e:Entry){const s=sectionOfCategory(e.category);return s?'/documents/'+s.slug+'?q='+encodeURIComponent(e.title):otherDocumentPages[e.category]||'/documents?q='+encodeURIComponent(e.title);}
+function documentHref(e:Entry){const s=sectionOfCategory(e.category);return s?'/documents/'+s.slug+'?q='+encodeURIComponent(e.title):otherDocumentPages[e.category]||(e.file.startsWith('/archive/')?'/documents/archive/'+e.year.replace('/','-')+'?q='+encodeURIComponent(e.title):'/documents?q='+encodeURIComponent(e.title));}
 initialEntries.push({id:'schedule-archive-2025',kind:'document',title:'Седмично разписание — табло на класовете',body:'Официален архивен документ, публикуван през февруари 2026 г. Не използвайте като актуално разписание.',category:'Графици',year:'2025/2026',date:'',file:'/schedule-2025-2026.pdf',image:'',source:'https://ohridski.eu/седмично-разписание/',details:'',published:1},{id:'application-archive-2021',kind:'document',title:'Заявление-декларация за записване в I клас',body:'Архивен образец за учебната 2021/2022 година. Предназначен е за справка, а не за текущия прием.',category:'Заявления',year:'2021/2022',date:'',file:'/application-2021-2022.docx',image:'',source:'https://ohridski.eu/заявления/',details:'',published:1});
 export type TeamMember={name:string;role:string;email:string;group:TeamGroup;photo?:string};
 export type TeamGroup='Ръководство'|'Педагогически екип'|'Администрация'|'Помощен персонал';
