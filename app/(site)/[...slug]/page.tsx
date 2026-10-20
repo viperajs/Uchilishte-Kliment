@@ -4,7 +4,7 @@ import { ArrowUpRight, Download, Users, BookOpen } from 'lucide-react';
 import { pages, mission, useful, currentYear, coverOf, galleryOf, attachmentsOf, documentSections, sectionOfCategory, otherDocumentCategories } from '@/lib/content';
 import { NewsGallery } from '@/app/NewsGallery';
 import { safeEntries } from '@/lib/server';
-import { Admissions, Contact, Documents, DocumentHub, DocumentSectionView, NewsList, SchoolMenu, SchoolSchedule, SiteSearch, TeamDirectory, HistoryStory } from '@/app/content-ui';
+import { Admissions, Contact, Documents, DocumentHub, DocumentSectionView, FreePlaces, NewsList, SchoolMenu, SchoolSchedule, SiteSearch, TeamDirectory, HistoryStory } from '@/app/content-ui';
 import { ArchiveBanner, ArchiveOverview } from '@/app/archive';
 import { ArchiveBrowser } from '@/app/archive-ui';
 import { archiveFiles, archiveYears } from '@/lib/archive';
@@ -25,6 +25,7 @@ export default async function Page({params,searchParams}:{params:Promise<{slug:s
 {path.startsWith('/admissions/')&&<Admissions grade={slug[1]} entries={entries.filter(e=>e.kind==='admission')}/>}
 {path==='/schedule'&&<SchoolSchedule entries={entries.filter(e=>e.kind==='schedule')}/>}
 {path==='/menu'&&<SchoolMenu entries={entries.filter(e=>e.kind==='menu')}/>}
+{path==='/free-places'&&<FreePlaces entries={entries.filter(e=>e.kind==='places')}/>}
 {path==='/documents/archive'&&<ArchiveOverview entries={entries}/>}
 {year&&<ArchiveBrowser year={year} years={archiveYears} files={archiveFiles(year.year,entries)} initialQuery={query.q||''}/>}
 {path==='/parents'&&<><div className="information-grid">{[['Електронен дневник','Оценки, отсъствия и комуникация с училището.','https://app.shkolo.bg/'],['Ученическо меню','Хранене, седмично меню и алергени.','/menu'],['Седмично разписание','Учебната седмица на Вашето дете.','/schedule'],['Заявления и декларации','Образци на административни документи.','/services']].map(([t,d,h])=><a key={h} href={h}><h2>{t}</h2><p>{d}</p><ArrowUpRight size={21}/></a>)}</div>{records.map(e=><article className="text-section" key={e.id}><h2>{e.title}</h2><p className="preserve-lines">{e.body}</p></article>)}</>}

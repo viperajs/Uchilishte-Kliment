@@ -44,7 +44,7 @@ export function EntryEditor({ entry, isNew, onClose, onSaved, onDelete }: { entr
           <label className="a-field title">{titleLabel} *<input autoFocus={isNew} required minLength={2} maxLength={200} value={draft.title} onChange={e => set('title', e.target.value)} placeholder={kind === 'news' ? 'Напр. Коледен концерт в училището' : kind === 'document' ? 'Напр. Правилник за дейността на училището' : ''} /></label>
           <div className="a-three">
             <label className="a-field">Учебна година<select className="a-select" value={draft.year} onChange={e => set('year', e.target.value)}>{years.map(y => <option key={y}>{y}</option>)}</select></label>
-            <label className="a-field">Дата<input type="date" required value={draft.date} onChange={e => set('date', e.target.value)} /></label>
+            <label className="a-field">{kind === 'places' ? 'Актуализирано на' : 'Дата'}<input type="date" required value={draft.date} onChange={e => set('date', e.target.value)} /></label>
             <CategoryField kind={kind} value={draft.category} onChange={v => set('category', v)} />
           </div>
         </section>
@@ -54,13 +54,13 @@ export function EntryEditor({ entry, isNew, onClose, onSaved, onDelete }: { entr
         {kind === 'news' && <section className="a-group"><h3>Снимки</h3><GalleryField gallery={gallery} cover={draft.image} onChange={(g, cover) => { setGallery(g); set('image', cover); }} /></section>}
 
         <section className="a-group">
-          <h3>{kind === 'team' ? 'Представяне' : kind === 'document' ? 'Описание (по желание)' : 'Текст'}</h3>
+          <h3>{kind === 'team' ? 'Представяне' : kind === 'document' ? 'Описание (по желание)' : kind === 'places' ? 'Бележка под таблицата (по желание)' : 'Текст'}</h3>
           {kind === 'team' && <label className="a-field">Служебен имейл<input type="email" value={draft.details} onChange={e => set('details', e.target.value)} placeholder="име.фамилия@edu.mon.bg" /></label>}
           <label className="a-field"><span className="sr-only">Текст</span><textarea rows={kind === 'news' ? 10 : 5} maxLength={30000} value={draft.body} onChange={e => set('body', e.target.value)} placeholder={kind === 'news' ? 'Разкажете какво се случи…' : ''} /><small>Празен ред започва нов абзац.</small></label>
           {kind === 'admission' && <AdmissionFields value={draft.details} onChange={v => set('details', v)} />}
         </section>
 
-        {(kind === 'schedule' || kind === 'menu') && <section className="a-group"><h3>Таблица</h3><TableField kind={kind} value={draft.details} onChange={v => set('details', v)} /></section>}
+        {(kind === 'schedule' || kind === 'menu' || kind === 'places') && <section className="a-group"><h3>Таблица</h3>{kind === 'places' && <p className="a-note">По един ред за всеки клас или паралелка, напр. „V а“ · „3“. Обновете датата при всяка промяна — тя се показва като „Актуализирано на“.</p>}<TableField kind={kind} value={draft.details} onChange={v => set('details', v)} /></section>}
 
         {kind === 'team' && <section className="a-group"><h3>Снимка</h3><GalleryField gallery={draft.image ? [draft.image] : []} cover={draft.image} onChange={g => set('image', g[g.length - 1] || '')} /></section>}
 

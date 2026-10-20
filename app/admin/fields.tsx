@@ -92,8 +92,11 @@ export function AdmissionFields({ value, onChange }: { value: string; onChange: 
   return <>{[['schedule', 'График'], ['plan', 'План-прием'], ['documents', 'Необходими документи'], ['stages', 'Класиране и срокове'], ['places', 'Свободни места']].map(([key, title]) => <label className="a-field" key={key}>{title}<textarea rows={3} style={{ minHeight: 80 }} value={data[key] || ''} onChange={e => onChange(JSON.stringify({ ...data, [key]: e.target.value }))} /></label>)}</>;
 }
 
+// Columns of the table editor, as shown on the public page.
+export const tableColumns: Record<string, string[]> = { schedule: ['Час', 'Понеделник', 'Вторник', 'Сряда', 'Четвъртък', 'Петък'], menu: ['Дата', 'Ястия', 'Алергени'], places: ['Клас / паралелка', 'Свободни места', 'Бележка'] };
+
 export function TableField({ kind, value, onChange }: { kind: string; value: string; onChange: (v: string) => void }) {
-  const labels = kind === 'schedule' ? ['Час', 'Понеделник', 'Вторник', 'Сряда', 'Четвъртък', 'Петък'] : ['Дата', 'Ястия', 'Алергени'];
+  const labels = tableColumns[kind] || tableColumns.menu;
   let rows: string[][] = [];
   try { rows = (JSON.parse(value || '[]') as string[][]).map(r => labels.map((_, j) => r[j] || '')); } catch {}
   const set = (next: string[][]) => onChange(JSON.stringify(next));
