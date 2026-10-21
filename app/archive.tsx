@@ -1,10 +1,16 @@
 import { ArrowUpRight, FolderArchive } from 'lucide-react';
-import { documentSections, fileSize, sectionOfCategory, type Entry } from '@/lib/content';
+import { documentSections, documentGroups, documentSectionHref, fileSize, sectionOfCategory, type Entry } from '@/lib/content';
+import { sectionIcons } from '@/app/section-icons';
 import { archiveFiles, archiveYears } from '@/lib/archive';
 
 const count = (n: number) => n + (n === 1 ? ' документ' : ' документа');
 
-export function ArchiveBanner() {
+// Banners at the top of /documents: the sections of groups marked banner, then the archive.
+export function DocumentBanners() {
+  return <div className="doc-banners">{documentGroups.filter(g => g.banner).flatMap(g => g.sections).map(s => { const Icon = sectionIcons[s.slug]; return <a key={s.slug} className="archive-banner featured" href={documentSectionHref(s)}><Icon size={26} aria-hidden="true" /><span><strong>{s.title}</strong>{s.note}</span><ArrowUpRight size={20} aria-hidden="true" /></a>; })}<ArchiveBanner /></div>;
+}
+
+function ArchiveBanner() {
   return <a className="archive-banner" href="/documents/archive"><FolderArchive size={26} aria-hidden="true" /><span><strong>Архив на документите</strong>Документация и заповеди от началото на учебните {archiveYears.map(y => y.year).join(', ')} г. – подредени по години и раздели.</span><ArrowUpRight size={20} aria-hidden="true" /></a>;
 }
 

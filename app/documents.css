@@ -40,3 +40,52 @@
 .doc-empty{padding:16px 20px;border:1px dashed #d5dfe4;border-radius:10px;color:#7a8893;font-size:14px}
 @media(max-width:1000px){.doc-layout{grid-template-columns:1fr;gap:24px}.doc-nav{position:static;flex-direction:row;overflow-x:auto;max-height:none;padding:6px}.doc-nav-label{display:none}.doc-nav a{white-space:nowrap;flex-shrink:0}}
 @media(max-width:640px){.doc-sections{grid-template-columns:1fr;gap:10px}.doc-sections>a{padding:14px}.doc-section-icon{width:42px;height:42px}}
+/* Падащи менюта с колони („Документи“), долен ред с връзки и мобилните заглавия. */
+[data-slot=dropdown-menu-content].nav-menu.nav-mega{width:min(800px,calc(100vw - 32px))}
+.nav-menu-columns{display:grid;gap:2px}
+.nav-mega .nav-menu-columns{grid-template-columns:1fr 1fr;gap:0 10px}
+.nav-mega .nav-menu-column+.nav-menu-column{padding-left:10px;border-left:1px solid #edf1f3}
+.nav-menu [data-slot=dropdown-menu-label].nav-menu-heading{padding:8px 12px 6px;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#5d7a4f}
+.nav-menu-footer{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding-top:8px;border-top:1px solid #e8eef1}
+.nav-menu-footer [data-slot=dropdown-menu-item].nav-menu-all{flex:1 1 180px;gap:9px;margin:0;border:0;border-radius:12px}
+.nav-menu-footer .nav-menu-all span{flex:1}
+.nav-mega .nav-menu-footer [data-slot=dropdown-menu-item].nav-menu-all{background:#f3f8f0}
+.nav-mega .nav-menu-footer [data-slot=dropdown-menu-item].nav-menu-all:focus{background:var(--green);color:#fff}
+.mobile-sheet .mobile-heading{display:block;padding:12px 18px 2px;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#8a9aa5}
+.mobile-sheet details a.mobile-all{font-weight:700;color:#3f7430}
+/* „За родителите“ и свободните места на „Прием“. */
+.parents-page{display:flex;flex-direction:column;gap:56px}
+.info-block{scroll-margin-top:130px}
+.admission-grid+.info-block{margin-top:64px}
+.info-block-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:22px;scroll-margin-top:130px}
+.info-block-head h2{font-size:30px;line-height:1.2;color:var(--navy)}
+.info-block-head .eyebrow{margin-bottom:8px}
+.calendar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.calendar-card{padding:22px;border:1px solid #e3eaee;border-radius:18px;background:#fff;box-shadow:0 8px 24px #0e24300d}
+.calendar-card h3{display:flex;align-items:center;gap:12px;font-size:17px;color:var(--navy);margin-bottom:12px}
+.calendar-card h3>span{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#eef6ea,#e1efd9);color:#3f7430;flex-shrink:0}
+.calendar-card ul{list-style:none;margin:0;padding:0}
+.calendar-card li{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:10px 0;border-top:1px dashed #e3eaee;font-size:14px}
+.calendar-card li:first-child{border-top:0}
+.calendar-card li span{color:#4c5b67}
+.calendar-card li strong{color:var(--navy);white-space:nowrap;font-size:13.5px}
+.places-total{margin-bottom:16px;color:#4c5b67}
+.places-total strong{font-size:22px;color:#3f7430;margin-right:4px}
+.places-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px}
+.place{display:flex;flex-direction:column;gap:2px;padding:16px 18px;border:1px solid #d7e5cf;border-radius:16px;background:linear-gradient(160deg,#f6faf3,#fff)}
+.place .place-class{font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--navy)}
+.place .place-class small{margin-left:5px;font-size:12px;font-weight:600;color:#7a8893}
+.place strong{font-family:var(--font-display);font-size:34px;line-height:1.15;color:#3f7430}
+.place>span:not(.place-class){font-size:12.5px;color:#6d7b86}
+.place em{margin-top:6px;font-size:12px;font-style:normal;font-weight:600;color:#5d7a4f;line-height:1.35}
+.place.full{border-color:#e3eaee;background:#f8fafb}
+.place.full strong{color:#a3b0b9}
+.places-note{margin-top:16px;font-size:14px;color:#6d7b86}
+.places-note a{color:#3f7430;font-weight:700}
+@media(max-width:1100px){.places-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}}
+@media(max-width:760px){.nav-mega .nav-menu-columns{grid-template-columns:1fr}.nav-mega .nav-menu-column+.nav-menu-column{padding-left:0;border-left:0}.info-block-head h2{font-size:24px}.parents-page{gap:40px}}
+@media(max-width:480px){.places-grid{grid-template-columns:repeat(2,1fr)}.calendar-grid{grid-template-columns:1fr}.calendar-card li{flex-direction:column;gap:2px}}
+.doc-banners{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:28px}
+.doc-banners .archive-banner{margin-bottom:0}
+.archive-banner.featured{background:linear-gradient(135deg,#e9f4e3,#f6faf3);border-color:#cfe0c6}
+@media(max-width:480px){.doc-banners{grid-template-columns:1fr}}

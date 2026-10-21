@@ -172,7 +172,7 @@ function DocumentBoard({ docs, loading, filtering, row, onAdd, onUpload, go }: {
       return <button type="button" key={s.slug} aria-pressed={slug === s.slug} onClick={() => setSlug(s.slug)}><SIcon size={17} /><span>{s.title}<small>{n === 0 ? 'Няма документи' : n === 1 ? '1 документ' : n + ' документа'}</small></span></button>;
     })}</div>}
     <div className="a-docs-main">
-      <header className="a-docs-head"><span className="a-docs-icon"><Icon size={22} /></span><div><h2>{section ? section.title : 'Други страници'}</h2><p>{section ? section.note : 'Заявления, декларации, бюджет, стипендии и съветите.'}</p></div>{section && <a className="a-btn ghost small" href={'/documents/' + section.slug} target="_blank" rel="noreferrer"><ExternalLink size={15} />Виж в сайта</a>}</header>
+      <header className="a-docs-head"><span className="a-docs-icon"><Icon size={22} /></span><div><h2>{section ? section.title : 'Други страници'}</h2><p>{section ? section.note : 'Бюджет, стипендии и съветите.'}</p></div>{section && <a className="a-btn ghost small" href={'/documents/' + section.slug} target="_blank" rel="noreferrer"><ExternalLink size={15} />Виж в сайта</a>}</header>
       {boxes.map(b => {
         const list = docs.filter(e => e.category === b.category);
         if (filtering && !list.length) return null;
