@@ -3,6 +3,8 @@ import fs from 'node:fs';
 const origin='http://localhost:5510';
 const path=new URL('../.env.auth-test',import.meta.url);
 const data=JSON.parse(fs.readFileSync(path,'utf8'));
+// Supabase may split the session over several cookies; this keeps the ones a response sets (not the cleared ones).
+const jar=res=>res.headers.getSetCookie().map(c=>c.split(';')[0]).filter(c=>!c.endsWith('=')).join('; ');
 const post=(route,payload,cookie='',source=origin)=>fetch(origin+'/api/auth/'+route,{method:'POST',headers:{'Content-Type':'application/json',Origin:source,Cookie:cookie},body:JSON.stringify(payload)});
 assert.equal((await post('setup',{...data,token:'0'.repeat(64)})).status,403);
 const activation=await post('setup',data);
@@ -12,16 +14,17 @@ assert.equal((await post('login',data,'','https://untrusted.example')).status,40
 assert.equal((await post('login',{...data,password:'incorrect'})).status,401);
 assert.equal((await post('login',{email:'unknown@example.com',password:'incorrect'})).status,401);
 const login=await post('login',data);assert.equal(login.status,200,'login');
-let setCookie=login.headers.get('set-cookie');assert.match(setCookie,/HttpOnly/i);assert.match(setCookie,/SameSite=Strict/i);
-let cookie=setCookie.split(';')[0];
+const setCookies=login.headers.getSetCookie();assert(setCookies.length&&setCookies.every(c=>/HttpOnly/i.test(c)&&/SameSite=Strict/i.test(c)),'HttpOnly SameSite=Strict session cookies');
+let cookie=jar(login);
 assert.equal((await fetch(origin+'/api/content?admin=1',{headers:{Cookie:cookie}})).status,200);
 assert.equal((await fetch(origin+'/api/content?admin=1',{headers:{'oai-authenticated-user-id':'local_seedy','oai-authenticated-user-email':'ohridski@gmail.com'}})).status,403,'ChatGPT headers grant no access');
 assert.equal((await post('password',{currentPassword:'incorrect',password:'a-strong-new-password'},cookie)).status,401);
 const changed=await post('password',{currentPassword:data.password,password:data.password+'N'},cookie);assert.equal(changed.status,200,'password change');
+assert.equal((await fetch(origin+'/api/content?admin=1',{headers:{Cookie:jar(changed)}})).status,200,'new session after password change');
 const oldPassword=data.password;data.password+='N';fs.writeFileSync(path,JSON.stringify(data),{mode:0o600});
 assert.equal((await fetch(origin+'/api/content?admin=1',{headers:{Cookie:cookie}})).status,403,'old session revoked');
 assert.equal((await post('login',{...data,password:oldPassword})).status,401,'old password rejected');
-const newLogin=await post('login',data);assert.equal(newLogin.status,200);cookie=newLogin.headers.get('set-cookie').split(';')[0];
+const newLogin=await post('login',data);assert.equal(newLogin.status,200);cookie=jar(newLogin);
 assert.equal((await post('logout',{},cookie)).status,200);
 assert.equal((await fetch(origin+'/api/content?admin=1',{headers:{Cookie:cookie}})).status,403,'logout revokes session');
 let limited=false;for(let i=0;i<11;i++){const r=await post('setup',{...data,token:'0'.repeat(64)});if(r.status===429){limited=true;break;}}

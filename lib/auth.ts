@@ -1,41 +1,41 @@
-import { database } from './d1';
-import { cookies } from 'next/headers';
-import { digest, randomToken } from './password';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabase, supabaseSession } from './supabase';
+import { digest } from './password';
 
-export const cookieName = 'school_admin_session';
-export function authDb() {
-  return database();
-}
-export type AdminAccount = { id: string; email: string; password_hash: string };
+// Accounts live in Supabase Auth (sign-ups disabled); only the addresses in ADMIN_EMAILS may administer the site.
+export const adminEmails = () => (process.env.ADMIN_EMAILS || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+export type AdminAccount = { id: string; email: string };
+// A session ends 8 hours after sign-in, however often it is refreshed: the token's amr claim keeps the sign-in time.
+const sessionLifetime = 8 * 60 * 60 * 1000;
+// getUser() asks Supabase Auth, so a signed-out or revoked session stops working at once.
 export async function getAdmin(): Promise<AdminAccount | null> {
-  const token = (await cookies()).get(cookieName)?.value;
-  if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   try {
-    return await authDb().prepare('SELECT a.id, a.email, a.password_hash FROM admin_sessions s JOIN admins a ON a.id=s.admin_id WHERE s.token_hash=? AND s.expires>?').bind(digest(token), Date.now()).first<AdminAccount>();
+    const { auth } = await supabaseSession();
+    const { data: { user } } = await auth.getUser();
+    const email = user?.email?.toLowerCase();
+    if (!user || !email || !adminEmails().includes(email)) return null;
+    const { data } = await auth.mfa.getAuthenticatorAssuranceLevel();
+    const signedIn = Math.max(0, ...(data?.currentAuthenticationMethods ?? []).map(m => typeof m === 'string' ? 0 : m.timestamp * 1000));
+    return Date.now() - signedIn < sessionLifetime ? { id: user.id, email } : null;
   } catch { return null; }
 }
-export async function createSession(adminId: string) {
-  const token = randomToken();
-  const lifetime = 8 * 60 * 60;
-  await authDb().batch([
-    authDb().prepare('DELETE FROM admin_sessions WHERE expires<=?').bind(Date.now()),
-    authDb().prepare('INSERT INTO admin_sessions (token_hash,admin_id,expires) VALUES (?,?,?)').bind(digest(token), adminId, Date.now() + lifetime * 1000),
-  ]);
-  (await cookies()).set(cookieName, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: lifetime });
-}
-export async function clearSession() {
-  const jar = await cookies();
-  const token = jar.get(cookieName)?.value;
-  if (token) await authDb().prepare('DELETE FROM admin_sessions WHERE token_hash=?').bind(digest(token)).run();
-  jar.set(cookieName, '', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', path: '/', maxAge: 0 });
+// Signs in on the session cookies. False for a wrong email or password; other failures throw.
+export async function signIn(email: string, password: string, session?: SupabaseClient) {
+  const { error } = await (session ?? await supabaseSession()).auth.signInWithPassword({ email, password });
+  if (error?.code === 'invalid_credentials') return false;
+  if (error) throw error;
+  return true;
 }
 export function trustedOrigin(req: Request) { return req.headers.get('origin') === new URL(req.url).origin; }
 export async function allowAttempt(req: Request, action: string, email: string) {
-  const now = Date.now(), windowStart = now - 15 * 60 * 1000;
+  const now = Date.now();
   const ip = (req.headers.get('x-forwarded-for')?.split(',')[0].trim()||req.headers.get('x-real-ip')||'local');
   const keys = [action + ':ip:' + digest(ip), action + ':email:' + digest(email.toLowerCase())];
-  const results = await authDb().batch(keys.map(key => authDb().prepare('INSERT INTO auth_limits (key,attempts,started) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN started<? THEN 1 ELSE attempts+1 END, started=CASE WHEN started<? THEN ? ELSE started END RETURNING attempts').bind(key,now,windowStart,windowStart,now)));
-  await authDb().prepare('DELETE FROM auth_limits WHERE started<?').bind(now - 86400000).run();
-  return results.every((r,i) => Number((r.results[0] as {attempts:number})?.attempts) <= (i === 0 ? 10 : 30));
+  const attempts = await Promise.all(keys.map(async key => {
+    const { data, error } = await supabase().rpc('auth_attempt', { attempt_key: key, now_ms: now });
+    if (error) throw error;
+    return Number(data);
+  }));
+  return attempts[0] <= 10 && attempts[1] <= 30;
 }
 export function authResponse(data: object, status = 200) { return Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } }); }

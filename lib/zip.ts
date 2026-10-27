@@ -59,14 +59,14 @@ export function zip(files: { path: string; data: Uint8Array<ArrayBuffer> }[], da
   return new Blob([...parts, ...central, end.buffer], { type: 'application/zip' });
 }
 
-// Files kept on another server (e.g. uploads in Vercel Blob) are added when that server allows it; otherwise
+// Files kept on another server (e.g. uploads, which /api/files/ redirects to Supabase Storage) are added when that server allows it; otherwise
 // they are left out and returned, so they can be downloaded one by one. A missing file of the site stops the archive.
 export async function downloadZip(items: ZipItem[], filename: string, progress?: (done: number, total: number) => void) {
   const files: ({ path: string; data: Uint8Array<ArrayBuffer> } | undefined)[] = new Array(items.length);
   let next = 0, done = 0, failed = false;
   async function worker() {
     while (next < items.length && !failed) {
-      const i = next++, external = /^https:/.test(items[i].url);
+      const i = next++, external = /^(https:|\/api\/files\/)/.test(items[i].url);
       try {
         const response = await fetch(items[i].url);
         if (!response.ok) throw new Error(`${response.status} ${items[i].url}`);
