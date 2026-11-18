@@ -1,35 +1,27 @@
-// Uploaded files: Vercel Blob when BLOB_READ_WRITE_TOKEN is set, otherwise a local folder for development.
-import { put, list } from '@vercel/blob';
-import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
-import path from 'node:path';
-import { uploadTypes } from './uploads';
+// Uploaded files: the public Supabase Storage bucket "uploads", one folder per file id (<uuid>.<ext>).
+// Storage keys must be ASCII, so the original (often Cyrillic) file name is kept base64url-encoded as the object name.
+import { supabase, uploadsBucket } from './supabase';
 
-const useBlob = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
-const localDir = path.join(process.cwd(), '.data', 'uploads');
-const safeName = (name: string) => name.replace(/[^\p{L}\p{N}._-]+/gu, '_').slice(0, 120) || 'file';
+const bucket = () => supabase().storage.from(uploadsBucket);
+// A long name is shortened before its extension, which the downloaded file needs.
+const safeName = (name: string) => {
+  const clean = name.replace(/[^\p{L}\p{N}._-]+/gu, '_'), ext = /\.[a-z0-9]{1,5}$/i.exec(clean)?.[0] ?? '';
+  return (clean.length > 120 ? clean.slice(0, 120 - ext.length) + ext : clean) || 'file';
+};
 
-export async function saveFile(id: string, bytes: Uint8Array, contentType: string, filename: string) {
-  const name = safeName(filename);
-  if (useBlob()) {
-    await put(`uploads/${id}/${name}`, Buffer.from(bytes), { access: 'public', contentType, addRandomSuffix: false });
-    return;
-  }
-  await mkdir(path.join(localDir, id), { recursive: true });
-  await writeFile(path.join(localDir, id, name), bytes);
+// A one-time URL (valid 2 hours) the browser sends the file to directly, so large files never pass through the server.
+export async function createUpload(id: string, filename: string) {
+  const { data, error } = await bucket().createSignedUploadUrl(`${id}/${Buffer.from(safeName(filename)).toString('base64url')}`);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
-export async function loadFile(id: string): Promise<{ body: BodyInit; contentType: string; filename: string } | null> {
-  if (useBlob()) {
-    const { blobs } = await list({ prefix: `uploads/${id}/`, limit: 1 });
-    if (!blobs[0]) return null;
-    const res = await fetch(blobs[0].url);
-    if (!res.ok || !res.body) return null;
-    return { body: res.body, contentType: res.headers.get('content-type') || 'application/octet-stream', filename: blobs[0].pathname.split('/').pop() || id };
-  }
-  try {
-    const [name] = await readdir(path.join(localDir, id));
-    if (!name) return null;
-    const ext = id.split('.').pop() || '';
-    return { body: new Uint8Array(await readFile(path.join(localDir, id, name))), contentType: uploadTypes[ext] || 'application/octet-stream', filename: name };
-  } catch { return null; }
+// The public address of an uploaded file; documents download under their original name.
+export async function fileUrl(id: string) {
+  const { data, error } = await bucket().list(id, { limit: 1 });
+  if (error) throw error;
+  const key = data[0]?.name;
+  if (!key) return null;
+  const download = /\.(pdf|docx|xlsx|p7s|p7m)$/.test(id) ? { download: Buffer.from(key, 'base64url').toString() } : undefined;
+  return bucket().getPublicUrl(`${id}/${key}`, download).data.publicUrl;
 }

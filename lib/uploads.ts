@@ -1,4 +1,4 @@
-// Upload rules shared by the local upload route and the Vercel Blob client-upload route.
+// Upload rules shared by the upload route and the admin's browser upload to Supabase Storage.
 export const maxUploadBytes = 50 * 1024 * 1024;
 export const uploadTypes: Record<string, string> = {
   pdf: 'application/pdf',
