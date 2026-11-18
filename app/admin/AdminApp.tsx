@@ -10,7 +10,7 @@ import './documents-board.css';
 import { PasswordField } from './AuthForms';
 import { BulkUpload } from './BulkUpload';
 import { EntryEditor } from './EntryEditor';
-import { bgDate, blank, pageTargets, sectionOf, sections, toSection, type SectionKey } from './sections';
+import { bgDate, blank, pageTargets, sectionKeyOf, sectionOf, sections, toSection, type SectionKey } from './sections';
 
 type Message = { id: string; first: string; last: string; email: string; phone: string; message: string; created: number };
 const listKinds = sections.filter(s => s.one).map(s => s.key);
@@ -46,7 +46,7 @@ export default function AdminApp({ email, initialSection }: { email: string; ini
   }
   async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); window.location.assign('/admin'); }
 
-  const counts = useMemo(() => Object.fromEntries(listKinds.map(k => [k, items.filter(e => e.kind === k).length])), [items]);
+  const counts = useMemo(() => Object.fromEntries(listKinds.map(k => [k, items.filter(e => sectionKeyOf(e) === k).length])), [items]);
   const current = sectionOf(section);
   return <div className={'a-shell' + (menu ? ' menu-open' : '')}>
     <aside className="a-side" aria-label="Администрация">
@@ -72,7 +72,7 @@ export default function AdminApp({ email, initialSection }: { email: string; ini
         {error && <p className="a-error" role="alert" style={{ marginBottom: 16 }}>{error} <button type="button" className="a-btn ghost small" onClick={load}><RefreshCw size={14} />Опитай отново</button></p>}
         {section === 'dashboard' ? <Dashboard items={items} messages={messages} loading={loading} go={go} create={create} onBulk={() => setBulk({ n: Date.now() })} />
           : section === 'inbox' ? <InboxView messages={messages} />
-            : <EntryList key={section} kind={section} items={items.filter(e => e.kind === section)} loading={loading} onNew={() => create(section)} onBulk={() => setBulk({ n: Date.now() })} onNewIn={category => create('document', category)} onBulkIn={(category, files) => setBulk({ category, files, n: Date.now() })} go={go} onEdit={e => setEditing({ entry: { ...e }, isNew: false })} onDelete={setRemoving} />}
+            : <EntryList key={section} kind={section} items={items.filter(e => sectionKeyOf(e) === section)} loading={loading} onNew={() => create(section)} onBulk={() => setBulk({ n: Date.now() })} onNewIn={category => create('document', category)} onBulkIn={(category, files) => setBulk({ category, files, n: Date.now() })} go={go} onEdit={e => setEditing({ entry: { ...e }, isNew: false })} onDelete={setRemoving} />}
       </main>
     </div>
     {editing && <EntryEditor key={editing.entry.id} entry={editing.entry} isNew={editing.isNew} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load(); }} onDelete={setRemoving} />}
@@ -92,7 +92,7 @@ function Dashboard({ items, messages, loading, go, create, onBulk }: { items: En
   const year = currentYear();
   const docsThisYear = items.filter(e => e.kind === 'document' && e.year === year).length;
   const drafts = items.filter(e => !e.published).length;
-  const recent = [...items].filter(e => listKinds.includes(e.kind as SectionKey)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
+  const recent = [...items].filter(e => listKinds.includes(sectionKeyOf(e))).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
   return <>
     <div className="a-head"><div><h1>Добре дошли 👋</h1><p>Какво искате да направите днес?</p></div></div>
     <div className="a-quick">
@@ -103,7 +103,7 @@ function Dashboard({ items, messages, loading, go, create, onBulk }: { items: En
     <div className="a-year-banner"><CalendarCheck size={26} /><p>Текуща учебна година: <strong>{year}</strong> · {loading ? '…' : docsThisYear === 0 ? 'все още няма качени документи' : docsThisYear + (docsThisYear === 1 ? ' документ' : ' документа')}{drafts > 0 && ` · ${drafts} ${drafts === 1 ? 'чернова' : 'чернови'}`}</p></div>
     <div className="a-stats">{sections.filter(s => ['news', 'document', 'admission', 'schedule'].includes(s.key)).map(s => <button type="button" className="a-stat" key={s.key} onClick={() => go(s.key)}><s.icon /><div><strong>{loading ? '–' : items.filter(e => e.kind === s.key).length}</strong><span>{s.label}</span></div></button>)}</div>
     <section className="a-card"><h2 className="a-section-title">Последни записи</h2>
-      {recent.length ? <ul className="a-list">{recent.map(e => <li className="a-row" key={e.id} style={{ gridTemplateColumns: '52px minmax(0,1fr) auto' }}><Thumb entry={e} /><div className="a-row-main" onClick={() => go(e.kind as SectionKey)}><strong>{e.title}</strong><span>{[sectionOf(e.kind).label, bgDate(e.date), e.year].filter(Boolean).join(' · ')}</span></div><Status entry={e} /></li>)}</ul>
+      {recent.length ? <ul className="a-list">{recent.map(e => <li className="a-row" key={e.id} style={{ gridTemplateColumns: '52px minmax(0,1fr) auto' }}><Thumb entry={e} /><div className="a-row-main" onClick={() => go(sectionKeyOf(e))}><strong>{e.title}</strong><span>{[sectionOf(sectionKeyOf(e)).label, bgDate(e.date), e.year].filter(Boolean).join(' · ')}</span></div><Status entry={e} /></li>)}</ul>
         : <div className="a-empty">{loading ? 'Зареждане…' : 'Все още няма записи.'}</div>}
     </section>
   </>;
@@ -116,7 +116,7 @@ function EntryList({ kind, items, loading, onNew, onBulk, onNewIn, onBulkIn, go,
   const categories = [...new Set(items.map(e => e.category).filter(Boolean))].sort();
   const needle = q.trim().toLowerCase();
   const shown = items.filter(e => (!year || e.year === year) && (!status || String(e.published) === status) && (!category || e.category === category) && (!needle || (e.title + ' ' + e.body + ' ' + e.category).toLowerCase().includes(needle)));
-  const categoryLabel = (c: string) => kind === 'page' ? pageTargets[c] || c : kind === 'admission' ? c + ' клас' : kind === 'document' ? docCategoryLabel(c) : c;
+  const categoryLabel = (c: string) => kind === 'parents' ? '' : kind === 'page' ? pageTargets[c] || c : kind === 'admission' ? c + ' клас' : kind === 'document' ? docCategoryLabel(c) : c;
   const row = (e: Entry) => <li className="a-row" key={e.id}>
         <Thumb entry={e} />
         <div className="a-row-main" onClick={() => onEdit(e)}><strong>{e.title}</strong><span>{[categoryLabel(e.category), e.year, bgDate(e.date)].filter(Boolean).join(' · ')}{attachmentsOf(e).length > 0 && <> · <ShieldCheck size={12} style={{ display: 'inline', verticalAlign: '-1px' }} /> {attachmentsOf(e).length} прикачени</>}</span></div>
@@ -172,7 +172,7 @@ function DocumentBoard({ docs, loading, filtering, row, onAdd, onUpload, go }: {
       return <button type="button" key={s.slug} aria-pressed={slug === s.slug} onClick={() => setSlug(s.slug)}><SIcon size={17} /><span>{s.title}<small>{n === 0 ? 'Няма документи' : n === 1 ? '1 документ' : n + ' документа'}</small></span></button>;
     })}</div>}
     <div className="a-docs-main">
-      <header className="a-docs-head"><span className="a-docs-icon"><Icon size={22} /></span><div><h2>{section ? section.title : 'Други страници'}</h2><p>{section ? section.note : 'Заявления, декларации, бюджет, стипендии и съветите.'}</p></div>{section && <a className="a-btn ghost small" href={'/documents/' + section.slug} target="_blank" rel="noreferrer"><ExternalLink size={15} />Виж в сайта</a>}</header>
+      <header className="a-docs-head"><span className="a-docs-icon"><Icon size={22} /></span><div><h2>{section ? section.title : 'Други страници'}</h2><p>{section ? section.note : 'Бюджет, стипендии и съветите.'}</p></div>{section && <a className="a-btn ghost small" href={'/documents/' + section.slug} target="_blank" rel="noreferrer"><ExternalLink size={15} />Виж в сайта</a>}</header>
       {boxes.map(b => {
         const list = docs.filter(e => e.category === b.category);
         if (filtering && !list.length) return null;
@@ -198,7 +198,7 @@ function DropBox({ title, count, onAdd, onFiles, children }: { title: string; co
 
 function Thumb({ entry }: { entry: Entry }) {
   const src = coverOf(entry);
-  const Icon = sectionOf(entry.kind).icon;
+  const Icon = sectionOf(sectionKeyOf(entry)).icon;
   return <div className="a-thumb">{src && /\.(jpe?g|png|webp)(\?|$)/i.test(src) ? <img src={src} alt="" loading="lazy" /> : entry.kind === 'document' ? <FileText size={22} /> : <Icon size={22} />}</div>;
 }
 const Status = ({ entry }: { entry: Entry }) => entry.published ? <span className="a-badge live">Публикувано</span> : <span className="a-badge draft">Чернова</span>;

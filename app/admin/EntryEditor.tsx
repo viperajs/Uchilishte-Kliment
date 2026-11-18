@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { attachmentsOf, galleryOf, schoolYears, type Attachment, type Entry } from '@/lib/content';
 import { AdmissionFields, AttachmentsField, DocumentCategorySelect, GalleryField, MainFile, TableField } from './fields';
-import { newsCategories, pageTargets, sectionOf } from './sections';
+import { newsCategories, pageTargets, parentsPage, sectionKeyOf, sectionOf } from './sections';
 import { fileTitle } from './upload';
 
 export function EntryEditor({ entry, isNew, onClose, onSaved, onDelete }: { entry: Entry; isNew: boolean; onClose: () => void; onSaved: () => void; onDelete: (e: Entry) => void }) {
@@ -15,7 +15,7 @@ export function EntryEditor({ entry, isNew, onClose, onSaved, onDelete }: { entr
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
   const set = <K extends keyof Entry>(key: K, value: Entry[K]) => { setDraft(d => ({ ...d, [key]: value })); setDirty(true); };
-  const kind = draft.kind, section = sectionOf(kind);
+  const kind = draft.kind, section = sectionOf(sectionKeyOf(draft));
   const years = schoolYears();
   if (!years.includes(draft.year)) years.push(draft.year);
 
@@ -88,6 +88,8 @@ export function EntryEditor({ entry, isNew, onClose, onSaved, onDelete }: { entr
 function CategoryField({ kind, value, onChange }: { kind: string; value: string; onChange: (v: string) => void }) {
   if (kind === 'document') return <label className="a-field">Раздел<DocumentCategorySelect value={value} onChange={onChange} /></label>;
   if (kind === 'admission') return <label className="a-field">Клас<select className="a-select" value={value} onChange={e => onChange(e.target.value)}>{[['1', 'I клас'], ['5', 'V клас'], ['8', 'VIII клас'], ['11', 'XI клас']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>;
+  // Texts of „За родители“ always belong to that page.
+  if (kind === 'page' && value === parentsPage) return <span />;
   if (kind === 'page') return <label className="a-field">Страница<select className="a-select" value={value} onChange={e => onChange(e.target.value)}>{Object.entries(pageTargets).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>;
   if (kind === 'news') return <label className="a-field">Категория<input list="news-categories" value={value} onChange={e => onChange(e.target.value)} /><datalist id="news-categories">{newsCategories.map(c => <option key={c} value={c} />)}</datalist></label>;
   if (kind === 'team') return <label className="a-field">Длъжност<input value={value} onChange={e => onChange(e.target.value)} placeholder="Учител по…" /></label>;

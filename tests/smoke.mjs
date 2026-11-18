@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const origin='http://localhost:5510';
-const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/documents/pravilnici','/documents/grafici','/documents/archive','/documents/archive/2021-2022','/documents/archive/2022-2023','/documents/archive/2023-2024','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/services','/contacts','/search','/privacy','/admin'];
+const paths=['/','/school/mission','/school/history','/team','/admissions','/admissions/1','/admissions/5','/admissions/8','/admissions/11','/news','/news/stem-opening','/documents','/documents/pravilnici','/documents/grafici','/documents/archive','/documents/archive/2021-2022','/documents/archive/2022-2023','/documents/archive/2023-2024','/schedule','/menu','/scholarships','/parents','/council/students','/council/public','/budget','/documents/deklaracii-i-zayavleniya','/contacts','/search','/privacy','/admin'];
 for(const path of paths){const r=await fetch(origin+path);assert.equal(r.status,200,path);const html=await r.text();assert.match(html,/<html lang="bg"/);assert.match(html,/<title>/);assert(!html.includes('BUILD ERROR'),path);}
 assert.equal((await fetch(origin+'/missing-page-test')).status,404);
+const moved=await fetch(origin+'/services',{redirect:'manual'});assert.equal(moved.status,308);assert.match(moved.headers.get('location')||'',/\/documents\/deklaracii-i-zayavleniya$/);
 assert.equal((await fetch(origin+'/documents/archive/1999-2000')).status,404);
 const archive=await fetch(origin+'/archive/2023-2024/dokumentatsiya/godishen-plan-2023-2024.docx');assert.equal(archive.status,200);assert.equal((await archive.arrayBuffer()).byteLength>1000,true);
 const archivePage=await (await fetch(origin+'/documents/archive/2023-2024')).text();assert.match(archivePage,/download="Годишен план 2023-2024 уч\. г\.docx"/);assert(!/Руменов|ЕПЛР на /.test(archivePage),'student personal data must not be published');
