@@ -36,12 +36,13 @@ export const documentSections:DocumentSection[]=[
  {slug:'deklaracii-i-zayavleniya',title:'Декларации и заявления',note:'Образци на заявления и декларации за изтегляне.',items:['Заявления','Декларации']},
  {slug:'priem',title:'Прием',note:'Прием в I, V и VIII клас.',href:'/admissions'},
  {slug:'razpisanie',title:'Седмично разписание',note:'Седмичното разписание по класове.',href:'/schedule'},
+ {slug:'svobodni-mesta',title:'Свободни места',note:'Незаетите места по класове и паралелки.',href:'/free-places'},
 ];
 // Групи за горното меню и бързите бутони — всеки раздел е точно в една група.
 const bySlug=(slug:string)=>documentSections.find(s=>s.slug===slug)!;
 export const documentGroups=[
  {title:'Обучение',sections:['uchebni-planove','formi-na-obuchenie','ores','dneven-rezhim','grafici','razpisanie','izpiti'].map(bySlug)},
- {title:'Ученици',sections:['priem','deklaracii-i-zayavleniya','deynosti-po-interesi','sport','olimpiadi'].map(bySlug)},
+ {title:'Ученици',sections:['priem','svobodni-mesta','deklaracii-i-zayavleniya','deynosti-po-interesi','sport','olimpiadi'].map(bySlug)},
  {title:'Планове и програми',sections:['strategiya','planove','plan-grafici','plan-programi','programi'].map(bySlug)},
  {title:'Правилници',sections:['pravilnici','etichen-kodeks','pravila','proceduri','mehanizmi','ukazaniya'].map(bySlug)},
 ];
@@ -86,7 +87,8 @@ export const formsHref='/documents/deklaracii-i-zayavleniya';
 // documents отбелязва менютата, съставени само от раздели на „Документи“.
 export type NavItem={title:string;href?:string;items?:[string,string,string?][];documents?:boolean};
 export const parentLinks:[string,string,string?][]=[['Полезна информация','/parents','Важното за всеки учебен ден.'],['Ученическо меню','/menu','Седмично меню и алергени.'],['Седмично разписание','/schedule'],['Декларации и заявления',formsHref],['Стипендии','/scholarships','Условия, срокове и документи.'],['Електронен дневник','https://app.shkolo.bg/','Оценки и отсъствия в Shkolo.']];
-export const navigation:NavItem[]=[...documentGroups.map(g=>({title:g.title,documents:true,items:g.sections.map(s=>[s.title,documentSectionHref(s)] as [string,string])})),{title:'За родители',items:parentLinks},{title:'Новини',href:'/news'},{title:'Свободни места',href:'/free-places'}];
+export const schoolLinks:[string,string,string?][]=[['Мисия','/school/mission','Образование за утрешния ден.'],['История','/school/history','Повече от век история.'],['Екип','/team','Ръководство, учители и служители.'],['Ученически съвет','/council/students','Състав, дейности и решения.'],['Обществен съвет','/council/public','Заедно за развитието на училището.'],['Бюджет','/budget','Финансови документи по години.']];
+export const navigation:NavItem[]=[{title:'Училище',items:schoolLinks},...documentGroups.map(g=>({title:g.title,documents:true,items:g.sections.map(s=>[s.title,documentSectionHref(s)] as [string,string])})),{title:'За родители',items:parentLinks},{title:'Новини',href:'/news'}];
 // Редът в хедъра няма място за „Начало“ и „Всички документи“: логото води към началото, а всяко меню с документи завършва с „Всички документи“.
 // Мобилното меню ги показва.
 export const mobileNavigation:NavItem[]=[{title:'Начало',href:'/'},...navigation,{title:'Всички документи',href:'/documents'}];
