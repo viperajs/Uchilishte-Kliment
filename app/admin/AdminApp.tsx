@@ -146,6 +146,9 @@ function EntryList({ kind, items, loading, onNew, onBulk, onNewIn, onBulkIn, go,
   </>;
 }
 
+// Sections of „Документи“ that are separate pages on the site, and the admin section each is edited in.
+const linkedSections: Record<string, SectionKey> = { priem: 'admission', razpisanie: 'schedule', 'svobodni-mesta': 'places' };
+
 // „Документи“ arranged as on the site: a tab per group, a button per section, then a box per subsection.
 // Each box has „Добави“ and accepts dropped files, so the category is always chosen for the user.
 function DocumentBoard({ docs, loading, filtering, row, onAdd, onUpload, go }: { docs: Entry[]; loading: boolean; filtering: boolean; row: (e: Entry) => React.ReactNode; onAdd: (category: string) => void; onUpload: (category: string, files?: File[]) => void; go: (k: SectionKey) => void }) {
@@ -167,7 +170,7 @@ function DocumentBoard({ docs, loading, filtering, row, onAdd, onUpload, go }: {
     </div>
     {group && <div className="a-docs-sections">{group.sections.map(s => {
       const SIcon = sectionIcons[s.slug] || FileText;
-      if (s.href) return <button type="button" key={s.slug} className="linked" onClick={() => go(s.slug === 'priem' ? 'admission' : 'schedule')}><SIcon size={17} /><span>{s.title}<small>Отделна секция →</small></span></button>;
+      if (s.href) return <button type="button" key={s.slug} className="linked" onClick={() => go(linkedSections[s.slug])}><SIcon size={17} /><span>{s.title}<small>Отделна секция →</small></span></button>;
       const n = inSection(s).length;
       return <button type="button" key={s.slug} aria-pressed={slug === s.slug} onClick={() => setSlug(s.slug)}><SIcon size={17} /><span>{s.title}<small>{n === 0 ? 'Няма документи' : n === 1 ? '1 документ' : n + ' документа'}</small></span></button>;
     })}</div>}
